@@ -1,15 +1,15 @@
 import pygame
 import numpy as np
-import random
-import math
 import datetime
 import PerlinNoise
+from PerlinNoise import round_up
 
 display_width = 720
 display_height = 400
-cell_size = 80
-num_rows = int(display_height/cell_size)
-num_cols = int(display_width/cell_size)
+cell_width = 100
+cell_height = 100
+num_rows = round_up(display_height/cell_height)
+num_cols = round_up(display_width/cell_width)
 
 # Colours
 white = (255,255,255)
@@ -68,17 +68,18 @@ def colourmap(value,cmap):
 		else:
 			return (255,255,255)
 
-def generate_terrain_1(width,height,initial_cell_size,iterations):
+def generate_terrain_1(width,height,initial_cell_width,initial_cell_height,iterations):
 	noise_array_composite = np.zeros((height,width))
 	min_height = 0
 	max_height = 0
 	for i in range(iterations):
-		cell_size = int(initial_cell_size/(2**i))
+		cell_width = int(initial_cell_width/(2**i))
+		cell_height = int(initial_cell_height/(2**i))
 		scale = 1/(2**i)
-		grid = PerlinNoise.create_grad_vectors(width,height,cell_size)
+		grid = PerlinNoise.create_grad_vectors(width,height,cell_width,cell_height)
 		for y in range(height):
 			for x in range(width):
-				value = PerlinNoise.perlin_coord(x,y,grid,cell_size,scale)
+				value = PerlinNoise.perlin_coord(x,y,grid,cell_width,cell_height,scale)
 				value += noise_array_composite[y,x]
 				noise_array_composite[y,x] = value
 				if value<min_height:
@@ -94,14 +95,15 @@ def generate_terrain_1(width,height,initial_cell_size,iterations):
 				pygame.display.update()
 	return noise_array_composite,min_height,max_height
 
-def generate_terrain_2(width,height,initial_cell_size,iterations):
+def generate_terrain_2(width,height,initial_cell_width,initial_cell_height,iterations):
 	noise_array_composite = np.zeros((height,width))
 	min_height = 0
 	max_height = 0
 	for i in range(iterations):
-		cell_size = int(initial_cell_size/(2**i))
+		cell_width = int(initial_cell_width/(2**i))
+		cell_height = int(initial_cell_height/(2**i))
 		scale = 1/(2**i)
-		noise_array,min_i,max_i = PerlinNoise.perlin_array(width,height,cell_size,scale)
+		noise_array,min_i,max_i = PerlinNoise.perlin_array(width,height,cell_width,cell_height,scale)
 		noise_array_composite = noise_array_composite+noise_array
 		for y in range(height):
 			for x in range(width):
@@ -123,8 +125,8 @@ def draw_screen(noise_surf,gridlines):
 	if gridlines:
 		for r in range(num_rows):
 			for c in range(num_cols):
-				pos = [c*cell_size,r*cell_size]
-				pygame.draw.rect(gameDisplay,black,(pos[0],pos[1],cell_size,cell_size),width=2)
+				pos = [c*cell_width,r*cell_height]
+				pygame.draw.rect(gameDisplay,black,(pos[0],pos[1],cell_width,cell_height),width=2)
 
 pygame.init()
 gameDisplay = pygame.display.set_mode((display_width,display_height))
@@ -136,7 +138,7 @@ gridlines = False
 
 if __name__=="__main__":
 
-	noise_array,min_height,max_height = generate_terrain_1(display_width,display_height,cell_size,4)
+	noise_array,min_height,max_height = generate_terrain_1(display_width,display_height,cell_width,cell_height,3)
 	
 	while not crashed:
 
@@ -156,7 +158,7 @@ if __name__=="__main__":
 					now = str(datetime.datetime.now())[:19]
 					now = '_'.join(now.split(' '))
 					now = '.'.join(now.split(':'))
-					pygame.image.save(gameDisplay,"Worlds/"+str(now)+".png")
+					pygame.image.save(gameDisplay,"Saved/"+str(now)+".png")
 
 		draw_screen(noise_surf,gridlines)
 		pygame.display.update()

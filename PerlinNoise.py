@@ -1,7 +1,9 @@
 import random
-import math
 import numpy as np
 from Vector_Operations import *
+
+def round_up(value):
+	return int(value)+(value%1>0)
 
 def smoothstep(x):
 	if x<=0:
@@ -22,15 +24,13 @@ def interpolate2D(point,vertices):
 	final = interpolate1D(y,top,bottom)
 	return final
 
-def create_grad_vectors(width,height,cell_size):
-	num_rows = int(height/cell_size)
-	num_cols = int(width/cell_size)
+def create_grad_vectors(width,height,cell_width,cell_height):
+	num_rows = round_up(height/cell_height)
+	num_cols = round_up(width/cell_width)
 	grid = np.empty((num_rows+1,num_cols+1),dtype=list)	
-	choices = [[1,1],[-1,1],[-1,-1],[1,-1]]
 	for r in range(num_rows+1):
 		for c in range(num_cols+1):
 			grad_vector = get_unit_vector([random.uniform(-1,1),random.uniform(-1,1)])
-			# grad_vector = random.choice(choices)
 			grid[r,c] = grad_vector
 	return grid
 
@@ -43,21 +43,19 @@ def get_dot_products(point,grid_points,grid):
 		vertex_pos = vertices[i]
 		offset_vector = get_vector(vertex_pos,point)
 		dot_product = dot(grad_vectors[i],offset_vector)
-		# if abs(dot_product)>0.8:
-		# 	print(dot_product)
 		dot_products.append(dot_product)
 	return dot_products
 
-def perlin_array(width,height,cell_size,scale=1):
+def perlin_array(width,height,cell_width,cell_height,scale=1):
 	max_height = 0
 	min_height = 0
-	grid = create_grad_vectors(width,height,cell_size)
+	grid = create_grad_vectors(width,height,cell_width,cell_height)
 	noise_array = np.zeros((height,width))
 	for y in range(height):
 		for x in range(width):
-			rel_x = (x-(x//cell_size)*cell_size)/cell_size
-			rel_y = (y-(y//cell_size)*cell_size)/cell_size
-			grid_points = ([y//cell_size,x//cell_size],[y//cell_size,x//cell_size+1],[y//cell_size+1,x//cell_size],[y//cell_size+1,x//cell_size+1])
+			rel_x = (x-(x//cell_width)*cell_width)/cell_width
+			rel_y = (y-(y//cell_height)*cell_height)/cell_height
+			grid_points = ([y//cell_height,x//cell_width],[y//cell_height,x//cell_width+1],[y//cell_height+1,x//cell_width],[y//cell_height+1,x//cell_width+1])
 			dot_products = get_dot_products([rel_x,rel_y],grid_points,grid)
 			value = interpolate2D([rel_x,rel_y],dot_products)*2/1.4143
 			value *= scale
@@ -66,20 +64,15 @@ def perlin_array(width,height,cell_size,scale=1):
 				max_height = value
 			elif value<min_height:
 				min_height = value
-			# for d in dot_products:
-			# 	if d>max_height:
-			# 		max_height = d
-			# 	elif d<min_height:
-			# 		min_height = d
 
 			noise_array[y,x] = value
 
 	return noise_array,min_height,max_height
 
-def perlin_coord(x,y,grid,cell_size,scale=1):
-	rel_x = (x-(x//cell_size)*cell_size)/cell_size
-	rel_y = (y-(y//cell_size)*cell_size)/cell_size
-	grid_points = ([y//cell_size,x//cell_size],[y//cell_size,x//cell_size+1],[y//cell_size+1,x//cell_size],[y//cell_size+1,x//cell_size+1])
+def perlin_coord(x,y,grid,cell_width,cell_height,scale=1):
+	rel_x = (x-(x//cell_width)*cell_width)/cell_width
+	rel_y = (y-(y//cell_height)*cell_height)/cell_height
+	grid_points = ([y//cell_height,x//cell_width],[y//cell_height,x//cell_width+1],[y//cell_height+1,x//cell_width],[y//cell_height+1,x//cell_width+1])
 	dot_products = get_dot_products([rel_x,rel_y],grid_points,grid)
 	value = interpolate2D([rel_x,rel_y],dot_products)*2/1.4143
 	value *= scale
