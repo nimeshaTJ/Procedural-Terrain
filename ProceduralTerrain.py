@@ -4,10 +4,10 @@ import datetime
 import PerlinNoise
 from PerlinNoise import round_up
 
-display_width = 720
-display_height = 400
-cell_width = 100
-cell_height = 100
+display_width = 500
+display_height = 300
+cell_width = 50
+cell_height = 50
 num_rows = round_up(display_height/cell_height)
 num_cols = round_up(display_width/cell_width)
 
@@ -72,6 +72,11 @@ def generate_terrain_1(width,height,initial_cell_width,initial_cell_height,itera
 	noise_array_composite = np.zeros((height,width))
 	min_height = 0
 	max_height = 0
+
+	loading_bar_width = display_width*0.7
+	loading_bar_height = display_height*0.1
+	loaded_percent = 0
+
 	for i in range(iterations):
 		cell_width = int(initial_cell_width/(2**i))
 		cell_height = int(initial_cell_height/(2**i))
@@ -90,21 +95,31 @@ def generate_terrain_1(width,height,initial_cell_width,initial_cell_height,itera
 				noise_surf.set_at([x,y],colour)
 				noise_surf.set_colorkey((0,0,0))
 
-			if y%3==0 or y==display_height:
-				gameDisplay.blit(noise_surf,(0,0))
-				pygame.display.update()
+			# if y%3==0 or y==display_height:
+			# 	gameDisplay.blit(noise_surf,(0,0))
+			# 	pygame.display.update()
+			loaded_percent += 1/(height*iterations)
+			pygame.draw.rect(gameDisplay,green,((display_width-loading_bar_width)/2,(display_height-loading_bar_height)/2,loaded_percent*loading_bar_width,loading_bar_height))
+			pygame.display.update()
+
 	return noise_array_composite,min_height,max_height
 
 def generate_terrain_2(width,height,initial_cell_width,initial_cell_height,iterations):
 	noise_array_composite = np.zeros((height,width))
 	min_height = 0
 	max_height = 0
+	
+	loading_bar_width = display_width*0.7
+	loading_bar_height = display_height*0.1
+	loaded_percent = 0
+
 	for i in range(iterations):
 		cell_width = int(initial_cell_width/(2**i))
 		cell_height = int(initial_cell_height/(2**i))
 		scale = 1/(2**i)
 		noise_array,min_i,max_i = PerlinNoise.perlin_array(width,height,cell_width,cell_height,scale)
 		noise_array_composite = noise_array_composite+noise_array
+		
 		for y in range(height):
 			for x in range(width):
 				value = noise_array_composite[y,x]
@@ -115,9 +130,13 @@ def generate_terrain_2(width,height,initial_cell_width,initial_cell_height,itera
 				colour = colourmap(value,"terrain")
 				noise_surf.set_at([x,y],colour)
 				noise_surf.set_colorkey((0,0,0))
-			if y%5==0 or y==display_height:
-				gameDisplay.blit(noise_surf,(0,0))
-				pygame.display.update()
+			# if y%5==0 or y==display_height:
+			# 	gameDisplay.blit(noise_surf,(0,0))
+			# 	pygame.display.update()
+			loaded_percent += 1/(height*iterations)
+			pygame.draw.rect(gameDisplay,green,((display_width-loading_bar_width)/2,(display_height-loading_bar_height)/2,loaded_percent*loading_bar_width,loading_bar_height))
+			pygame.display.update()
+
 	return noise_array_composite,min_height,max_height
 
 def draw_screen(noise_surf,gridlines):
